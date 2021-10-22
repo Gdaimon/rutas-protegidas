@@ -1,25 +1,59 @@
-import logo from './logo.svg';
-import './App.css';
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route
+} from "react-router-dom";
+import { Admin } from "./Admin.js";
+import { Navbar } from "./components/Navbar.js";
+import { Home } from "./Home.js";
+import { Login } from './components/Login';
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "@firebase/auth";
+import { auth } from "./config/firebase.js";
+import { Loading } from "./components/Loading.js";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    // Once
+    const [firebaseUser, setFirebaseUser] = useState(false);
+
+    useEffect(() => {
+        onAuthStateChanged(auth, (dataUser) => {
+
+            if (dataUser) {
+                console.log('El usuario logueado');
+                const usuario = {
+                    id: dataUser.uid,
+                    email: dataUser.email
+                }
+                console.log(usuario);
+                setFirebaseUser(usuario)
+            } else {
+                console.log('El usuario ya no esta logueado');
+                setFirebaseUser(null)
+            }
+
+        })
+    }, [setFirebaseUser])
+
+
+    return firebaseUser !== false ? (
+        // Segundo
+        <Router>
+            {/* Primero */}
+            <Navbar usuario={firebaseUser} />
+            <div className="container mt-3">
+                <Switch>
+                    <Route path="/login" component={Login} />
+                    <Route path="/admin" component={Admin} />
+                    <Route exact path="/" component={Home} />
+                </Switch>
+            </div>
+        </Router>
+    )
+        :
+        <Loading />
+        ;
 }
 
 export default App;
